@@ -198,7 +198,8 @@ function wpdatabase_add_record()
                     'address' => $address
 
                 ));
-                wp_redirect(admin_url('admin.php?page=dbdemo'));
+                $new_id = $wpdb->insert_id;
+                wp_redirect(admin_url('admin.php?page=dbdemo&pid='.$new_id));
             }
 
 
