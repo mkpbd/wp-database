@@ -120,25 +120,32 @@ function wpdatabase_display_menu_data(){
 
 
     ?>
-    <form action="" method="post">
+<!--    <form action="" method="post">-->
+    <form action="<?php echo admin_url('admin-post.php');?>" method="post">
         <?php wp_nonce_field('dbdemo', 'nonce'); ?>
+        <input type="hidden" name="action" value="add_record">
         <p><label for="name">Name</label>
-            <input type="text" name="name" value="">
+            <input type="text" name="name" value="<?php if($id) echo $result->name ?>">
         </p>
         <p><label for="email">email</label>
-            <input type="text" name="email" value="">
+            <input type="text" name="email" value="<?php if($id) echo $result->email ?>">
         </p>
          <p><label for="age">AGe</label>
-            <input type="text" name="age" value="">
+            <input type="text" name="age" value="<?php if($id) echo $result->age ?>">
         </p>
         <p><label for="address">Address</label>
-            <input type="text" name="address" value="">
+            <input type="text" name="address" value="<?php if($id) echo $result->address ?>">
         </p>
-    <?php submit_button("Add Record"); ?>
+    <?php  if($id){
+        echo "<input type='hidden' name='id' value='".$id."'";
+        submit_button("Update Record");
+    }else{
+        submit_button("Add Record");
+    }?>
     </form>
 
    <?php
-    if(isset($_POST['submit'])){
+   /* if(isset($_POST['submit'])){
         $noce = sanitize_text_field($_POST['nonce']);
         if(wp_verify_nonce($noce, 'dbdemo')) {
             $name = sanitize_text_field($_POST['name']);
@@ -156,5 +163,51 @@ function wpdatabase_display_menu_data(){
         }else{
             echo "you are not allowed";
         }
-    }
+    }*/
 }
+
+
+function wpdatabase_add_record()
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix."persons";
+
+        $noce = sanitize_text_field($_POST['nonce']);
+        if (wp_verify_nonce($noce, 'dbdemo')) {
+            $name = sanitize_text_field($_POST['name']);
+            $email = sanitize_email($_POST['email']);
+            $age = sanitize_text_field($_POST['age']);
+            $address = sanitize_text_field($_POST['address']);
+            $id = sanitize_text_field($_POST['id']);
+            if($id){
+                $wpdb->update($table_name,
+
+                    [ 'name' => $name,
+                    'age' => $age,
+                    'email' => $email,
+                    'address' => $address],
+
+                    ['id' => $id]
+                );
+                wp_redirect(admin_url('admin.php?page=dbdemo&pid='.$id));
+            }else{
+                $wpdb->insert($table_name, array(
+                    'name' => $name,
+                    'age' => $age,
+                    'email' => $email,
+                    'address' => $address
+
+                ));
+                wp_redirect(admin_url('admin.php?page=dbdemo'));
+            }
+
+
+
+        } else {
+            echo "you are not allowed";
+        }
+
+
+
+}
+add_action('admin_post_add_record', 'wpdatabase_add_record');
